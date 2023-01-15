@@ -1,0 +1,4 @@
+# created by virtualenv automatically
+*.env
+pyvenv.cfg
+sergei.py #my workfile for course on stepik and codewars.
