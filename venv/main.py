@@ -17,7 +17,7 @@ longpoll = VkBotLongPoll(vk_session, group_id)
 
 def send(id, text):
     pass
-
+#aasd
 
 def send_chat(id, text):
     vk.messages.send(chat_id=id, message=text, random_id=get_random_id(), keyboard=my_keyboard.get_my_keyboard())
