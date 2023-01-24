@@ -10,8 +10,11 @@ def get_keyboard_start_chat():
     key_board = VkKeyboard(inline=False)
 
     key_board.add_button('Отправить мем', color=VkKeyboardColor.PRIMARY)
+    key_board.add_button('Погода', color=VkKeyboardColor.PRIMARY)
+    key_board.add_line()
     key_board.add_button('Получить расписание', color=VkKeyboardColor.PRIMARY)
-    # сначала я должен загрузить это расписание
+    key_board.add_openlink_button('Твоя ссылочка на диск',
+                                  'https://disk.yandex.ru/client/disk/%D0%9F-48%2C%20%D0%9F-42')
 
     return key_board.get_keyboard()
 
@@ -37,7 +40,7 @@ def get_keyboard_materials():
     key_board.add_line()
     key_board.add_button('Дубровский, Сучков', color=VkKeyboardColor.PRIMARY)
     key_board.add_button('Экология', color=VkKeyboardColor.PRIMARY)
-    key_board.add_button('Назад', color=VkKeyboardColor.PRIMARY)
+    key_board.add_button('Назад.', color=VkKeyboardColor.PRIMARY)
 
     return key_board.get_keyboard()
 
@@ -50,7 +53,7 @@ def get_keyboard_time():
     key_board.add_line()
     key_board.add_button('за 6 месяцев', color=VkKeyboardColor.PRIMARY)
     key_board.add_button('за 1 год', color=VkKeyboardColor.PRIMARY)
-    key_board.add_button('Назад.', color=VkKeyboardColor.PRIMARY)
+    key_board.add_button('Назад..', color=VkKeyboardColor.PRIMARY)
 
     return key_board.get_keyboard()
 
@@ -61,9 +64,19 @@ def get_keyboard_other():
     key_board.add_button('Погода', color=VkKeyboardColor.PRIMARY)
     key_board.add_line()
     key_board.add_openlink_button('Случайная статья с википедии', wiki_parcer.wiki_parcer())
-    key_board.add_button('Назад', color=VkKeyboardColor.PRIMARY)
+    key_board.add_button('Назад.', color=VkKeyboardColor.PRIMARY)
 
     return key_board.get_keyboard()
+
+def get_keyboard_weather():
+    key_board = VkKeyboard(inline=False)
+    key_board.add_button('Москва', color=VkKeyboardColor.PRIMARY)
+    key_board.add_button('Назад', color=VkKeyboardColor.PRIMARY)
+    key_board.add_line()
+    key_board.add_button('Ввести другой город', color=VkKeyboardColor.PRIMARY)
+
+    return key_board.get_keyboard()
+
 
 
 

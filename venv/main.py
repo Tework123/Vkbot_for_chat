@@ -1,12 +1,14 @@
 import time
 import vk_api, json
-from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
-from vk_api.utils import get_random_id
-import wiki_parcer
-import my_keyboard
+from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType  # для прослушки сообщений
+from vk_api.utils import get_random_id  # для стабильной работы vk api
+import wiki_parcer  # парсит вики страничку
+import my_keyboard  # модуль с клавиатурами
 from dotenv import load_dotenv  # загрузка информации из .env-файла
 import os  # работа с файловой системой
-import Name
+import Name  # файлик с переменными, которые нужно менять, при переносе бота в другую группу
+import weather
+
 # загрузка токена и id группы из локального виртуального окружения
 load_dotenv()
 token_for_group = os.getenv("ACCESS_TOKEN_FOR_GROUP")
@@ -31,7 +33,8 @@ def send_to_user(id, text, keyboard=None):
     if keyboard == None:
         vk.messages.send(user_id=id, message=text, random_id=get_random_id())
     if keyboard == 'get_keyboard_start_user':
-        vk.messages.send(user_id=id, message=text, random_id=get_random_id(), keyboard=my_keyboard.get_keyboard_start_user())
+        vk.messages.send(user_id=id, message=text, random_id=get_random_id(),
+                         keyboard=my_keyboard.get_keyboard_start_user())
     if keyboard == 'keyboard_other':
         vk.messages.send(user_id=id, message=text, random_id=get_random_id(), keyboard=my_keyboard.get_keyboard_other())
     if keyboard == 'get_keyboard_materials':
@@ -39,6 +42,9 @@ def send_to_user(id, text, keyboard=None):
                          keyboard=my_keyboard.get_keyboard_materials())
     if keyboard == 'get_keyboard_time':
         vk.messages.send(user_id=id, message=text, random_id=get_random_id(), keyboard=my_keyboard.get_keyboard_time())
+    if keyboard == 'get_keyboard_weather':
+        vk.messages.send(user_id=id, message=text, random_id=get_random_id(),
+                         keyboard=my_keyboard.get_keyboard_weather())
 
 
 # отправка сообщений в группу
@@ -46,9 +52,13 @@ def send_chat(id, text, keyboard=None):
     if keyboard == None:
         vk.messages.send(chat_id=id, message=text, random_id=get_random_id())
     if keyboard == 'get_keyboard_start_chat':
-        vk.messages.send(chat_id=id, message=text, random_id=get_random_id(), keyboard=my_keyboard.get_keyboard_start_chat())
+        vk.messages.send(chat_id=id, message=text, random_id=get_random_id(),
+                         keyboard=my_keyboard.get_keyboard_start_chat())
     if keyboard == 'keyboard_other':
         vk.messages.send(chat_id=id, message=text, random_id=get_random_id(), keyboard=my_keyboard.get_keyboard_other())
+    if keyboard == 'get_keyboard_weather':
+        vk.messages.send(chat_id=id, message=text, random_id=get_random_id(),
+                         keyboard=my_keyboard.get_keyboard_weather())
 
 
 # прослушка и выделение id отправителя, id чата, нахождение требуемого ответа из допустимых
@@ -57,8 +67,7 @@ for event in longpoll.listen():
 
         # если получает сообщение из беседы
         if event.from_chat:
-            print('chat')
-            #из сообщения получает id беседы со стороны каждого пользователя(c моей стороны только)
+            # из сообщения получает id беседы со стороны каждого пользователя(c моей стороны только)
             id = event.chat_id
 
             id_user = event.message.get('from_id')
@@ -69,49 +78,84 @@ for event in longpoll.listen():
             # в хронологическом порядке (Например, если эта группа создана последней, то номер будет = 87)
             peer_id = event.message.get('peer_id')
 
-
             # цифры - id бота-группы, смотреть в вк, в поисковой строке
+
             bot_adress = '[club218249845|@public218249845]'
+            bot_adress1 = '[club218249845|@club218249845]'
 
             collection_chat = {
                 f"{bot_adress} Отправить мем": (id, f'Отправляю мем', None),
+                f"{bot_adress} Погода": (id, f'...', 'get_keyboard_weather'),
+                f"{bot_adress1} Погода": (id, f'...', 'get_keyboard_weather'),
+                f"{bot_adress} Москва": (id, f'{weather.get_weather("Москва", "RUS")}', None),
+                f"{bot_adress1} Москва": (id, f'{weather.get_weather("Москва", "RUS")}', None),
+                f"{bot_adress} Назад": (id, f'...', 'get_keyboard_start_chat'),
+                f"{bot_adress1} Назад": (id, f'...', 'get_keyboard_start_chat'),
                 f"{bot_adress} Получить расписание": (id, f'Выгружаю расписание', None),
+                f"{bot_adress1} Получить расписание": (id, f'Выгружаю расписание', None)
             }
 
             # для пересылания сообщений в группу, оставлю здесь пока, тут по другому ведется подсчет
-            if msg == 'a':
-                # mes = vk_user.messages.getHistory(peer_id=2000000000+100, random_id=get_random_id(), count=10)
-                mes = vk_user.messages.search(q='vot', peer_id=2000000000+100, random_id=get_random_id(), count=1) #ищет сообщение по строке
-                # print(mes)
-                # for i in mes['items']:
-                #     print(i)
-                vk_user.messages.send(peer_id=2000000000+100, random_id=get_random_id(), forward_messages=427245) #отправляет сообщение (по id) в беседу
-                mes2 = vk_user.messages.searchConversations(q='tren') #ищет беседу
-                #print(mes2)
+            if msg == f"{bot_adress} Получить расписание" or msg == f"{bot_adress1} Получить расписание":
+                mes = vk_user.messages.search(q='Расписание', peer_id=Name.PEER_ID,
+                                              random_id=get_random_id())  # ищет сообщение по строке
+                vk_user.messages.send(peer_id=Name.PEER_ID, random_id=get_random_id(),
+                                      forward_messages=429330)  # отправляет сообщение (по id) в беседу
 
-            if msg == '.бот':
-                #отправка клавиатуры пользователю в беседу
-                #ПРОВЕРИТЬ, КАК РАБОТАЕТ У КАМИЛЯ ПОЛУЧЕНИЕ ЕГО ID БЕСЕДЫ
-                send_chat(id, 'Hello my boy', 'get_keyboard_start_chat')
-
+            # работа с сообщениями из коллекции
             if msg in collection_chat:
                 send_chat(collection_chat[msg][0], collection_chat[msg][1], collection_chat[msg][2])
 
+            # ввод произвольного города и возвращение погоды в нем
+            if msg == f"{bot_adress} Ввести другой город" or msg == f"{bot_adress1} Ввести другой город" or msg == 'Введите корректное название города':
+                send_chat(id, 'Введите название города и отправьте в беседу')
+
+            # считывает последние два сообщения, в последнем должно содержаться название города
+            msg_last_city_chat = vk_user.messages.getHistory(peer_id=Name.PEER_ID, random_id=get_random_id(), count=2)
+
+            city = msg_last_city_chat['items'][0]['text']
+            write_city = msg_last_city_chat['items'][1]['text']
+
+            if write_city == 'Введите название города и отправьте в беседу' or write_city == 'Введите корректное название города':
+                city = city.split()
+
+                if len(city) == 1:
+                    temp = weather.get_weather(city[0])
+                    if temp == None:
+                        send_chat(id, 'Введите корректное название города')
+                    if temp != None:
+                        send_chat(id, temp)
+                elif len(city) > 1:
+                    temp = weather.get_weather(' '.join(city[:-1]), city[-1:])
+                    if temp == None:
+                        send_chat(id, 'Введите корректное название города')
+                    if temp != None:
+                        send_chat(id, temp)
+
+            if msg == '.бот':
+                # отправка клавиатуры пользователю в беседу
+                # ПРОВЕРИТЬ, КАК РАБОТАЕТ У КАМИЛЯ ПОЛУЧЕНИЕ ЕГО ID БЕСЕДЫ
+                send_chat(id, 'Hello my boy', 'get_keyboard_start_chat')
 
         # если получает сообщение из личного сообщения
         if event.from_user:
             # достает id юзера
             id = event.message.get('from_id')
+            print(id)
             # достает id чата с ботом и юзером
+            # Проверить с КАМОЙ
             chat_id = event.group_id
+            print(chat_id)
+            chat_id = chat_id * -1
 
-            chat_id = chat_id*-1
             # достает сообщение в текстовом виде
             msg = event.message.get('text')
 
             if msg == '.бот':
                 # отправка клавиатуры пользователю в личные сообщения
                 send_to_user(id, 'Hello my boy', 'get_keyboard_start_user')
+            if msg == 'Получить расписание':
+                vk_user.messages.send(peer_id=id, random_id=get_random_id(), forward_messages=429330)
 
             collection_user = {
                 # клавиатура get_keyboard_start_user
@@ -121,7 +165,8 @@ for event in longpoll.listen():
 
                 # клавиатура get_keyboard_other
                 f"Отправить мем": (id, f'Отправляю мем', None),
-                f"Назад": (id, f'Назад', 'get_keyboard_start_user'),
+                f"Погода": (id, f'...', 'get_keyboard_weather'),
+                f"Назад.": (id, f'Назад.', 'get_keyboard_start_user'),
 
                 # клавиатура get_keyboard_materials
                 f"Староверов": (id, f'Староверов', 'get_keyboard_time'),
@@ -129,8 +174,11 @@ for event in longpoll.listen():
                 f"Материаловедение": (id, f'Материаловедение', 'get_keyboard_time'),
                 f"Дубровский, Сучков": (id, f'Дубровский, Сучков', 'get_keyboard_time'),
                 f"Экология": (id, f'Экология', 'get_keyboard_time'),
-                f"Назад": (id, f'Назад', 'get_keyboard_start_user'),
-                f"Назад.": (id, f'Назад.', 'get_keyboard_materials')
+                f"Назад": (id, f'Назад', 'keyboard_other'),
+                f"Назад..": (id, f'Назад.', 'get_keyboard_materials'),
+
+                # клавиатура get_keyboard_weather
+                f"Москва": (id, f'{weather.get_weather("Москва", "RUS")}', None),
             }
 
             collection_user_time = {
@@ -141,7 +189,35 @@ for event in longpoll.listen():
                 f"за 6 месяцев": (id, f'за 6 месяцев', None),
                 f"за 1 год": (id, f'за 1 год', None),
             }
-            #определяет вид материала, время, за которое нужно вернуть его, а также сам парсер материалов из беседы
+
+            # ввод произвольного города и возвращение погоды в нем
+            if msg == f"Ввести другой город" or msg == 'Введите корректное название города':
+                send_to_user(id, 'Введите название города и отправьте мне')
+
+            # считывает последние два сообщения, в последнем должно содержаться название города
+            msg_last_city_chat = vk.messages.getHistory(peer_id=id, random_id=get_random_id(), count=2)
+            city = msg_last_city_chat['items'][0]['text']
+            write_city = msg_last_city_chat['items'][1]['text']
+
+            if write_city == 'Введите название города и отправьте мне' or write_city == 'Введите корректное название города':
+                city = city.split()
+                if len(city) == 1:
+                    temp = weather.get_weather(city[0])
+                    if temp == None:
+                        send_to_user(id, 'Введите корректное название города')
+                    if temp != None:
+                        send_to_user(id, temp)
+                elif len(city) > 1:
+                    temp = weather.get_weather(' '.join(city[:-1]), city[-1:])
+                    if temp == None:
+                        send_to_user(id, 'Введите корректное название города')
+                    if temp != None:
+                        send_to_user(id, temp)
+
+            # Здесь парсит опять два последних сообщения за счет юзера и смотрит, если в предыдущем "ввести другой город",
+            # а в последнем какое то слово, то он его загоняет в weather, а она выдает сразу инфу. Про москву тоже сделать
+
+            # определяет вид материала, время, за которое нужно вернуть его, а также сам парсер материалов из беседы
             if msg in collection_user_time:
                 # определяет, подряд ли идут два сообщения: предмет/препод, а потом время возвращения
                 msg_last = vk.messages.getHistory(peer_id=id, random_id=get_random_id(), count=2)
@@ -155,7 +231,7 @@ for event in longpoll.listen():
                     flag2 = True
                 if flag1 == True and flag2 == True:
 
-                    #время, за которое нужно вернуть сообщения
+                    # время, за которое нужно вернуть сообщения
                     if time_return == 'за 2 недели':
                         time_return = 1209600
                     if time_return == 'за 1 месяц':
@@ -166,28 +242,79 @@ for event in longpoll.listen():
                         time_return = 14515200
                     if time_return == 'за 1 год':
                         time_return = 29030400
+                    # для нахождения требуемого сообщения (меняется только через код)
+                    object_or_name = object_or_name
+
                     # здесь номер группы будет отличаться, здесь счет в хронологическом порядке
-                    materials = vk_user.messages.search(q=object_or_name, peer_id=Name.PEER_ID, random_id=get_random_id())
+                    materials = vk_user.messages.search(q=object_or_name, peer_id=Name.PEER_ID,
+                                                        random_id=get_random_id(), count=100)
+                    # цикл перебора полученных материалов и их пересылание
+
                     # если ничего не нашел
                     if materials['count'] == 0:
                         vk.messages.send(user_id=id, message='Ничего не найдено', random_id=get_random_id())
-                    # пересылание сообщений
-                    for i in materials['items']:
-                        id_message = i['id']
 
-                        # время создания сообщения
-                        time_message = i['date']
+                    # парсит время отправки последних 15 сообщений, сравнивает с настоящим
+                    # чтобы обойти капчу при повторном запуске поиска
+                    try:
+                        last_five_msg = vk.messages.getHistory(peer_id=id, random_id=get_random_id(), count=15)
+                        result = 0
+                        for k in last_five_msg['items']:
+                            time_five_message = k['date']
+                            result += time_five_message
+                        result = result // 15
+                        if time.time() - 120 < result:
+                            vk.messages.send(user_id=id, message='Ты тут играешься? Подожди 2 минуты, я решаю капчу',
+                                             random_id=get_random_id())
+                            time.sleep(120)
 
-                        # время создания, отсылается, если сообщение слишком старое
-                        old_mes_time = time.asctime(time.localtime(time_message))
+                        # пересылание сообщений
+                        counter = 0
+                        counter_hard = 0
+                        materials_counter = materials['count']
+                        for i in materials['items']:
+                            id_message = i['id']
 
-                        # сравнивается время создания и настоящее время за вычетом выбранного
-                        if (round(time.time()) - int(time_return)) <= time_message:
-                            vk_user.messages.send(peer_id=chat_id, random_id=get_random_id(), forward_messages=id_message)
-                            print('отправил')
-                        else:
-                            vk.messages.send(user_id=id, message=f'Слишком старое сообщение, дата его создания: {old_mes_time}', random_id=get_random_id())
-                            print('Слишком старый файл')
+                            # время создания сообщения
+                            time_message = i['date']
+
+                            # время создания, отсылается, если сообщение слишком старое
+                            old_mes_time = time.asctime(time.localtime(time_message))
+                            # обход капчи
+                            counter += 1
+                            counter_hard += 1
+                            materials_counter -= 1
+
+                            if counter == 15:
+                                counter = 0
+                                vk.messages.send(user_id=id,
+                                                 message=f'Осталось материалов: {materials_counter}. Сейчас решаю капчу от вк... Подождите минуту',
+                                                 random_id=get_random_id())
+                                time.sleep(60)
+
+                            if counter_hard == 30:
+                                counter_hard = 0
+                                vk.messages.send(user_id=id,
+                                                 message=f'Осталось материалов: {materials_counter}. Вк отправил суперсложную капчу... Подождите 2 минуты',
+                                                 random_id=get_random_id())
+                                time.sleep(90)
+
+                            # сравнивается время создания и настоящее время за вычетом выбранного
+                            if (round(time.time()) - int(time_return)) <= time_message:
+                                vk_user.messages.send(peer_id=id, random_id=get_random_id(),
+                                                      forward_messages=id_message)
+                                # vk.messages.send(user_id=chat_id, random_id=get_random_id(), forward_messages=id_message)
+
+                            else:
+                                vk.messages.send(user_id=id,
+                                                 message=f'Слишком старое сообщение, дата его создания: {old_mes_time}',
+                                                 random_id=get_random_id())
+                                print('Слишком старый файл')
+                        vk.messages.send(user_id=id, message='На этом все', random_id=get_random_id())
+                    except:
+                        vk.messages.send(user_id=id,
+                                         message=f'Зачем ты тыкаешь, дай мне спокойно все выгрузить. Посиди в бане 5 минут, а потом повтори запрос. Осталось материалов: {materials_counter}',
+                                         random_id=get_random_id())
 
                 # если запрос был задан неправильно
                 else:
@@ -198,15 +325,5 @@ for event in longpoll.listen():
             if msg in collection_user:
                 send_to_user(collection_user[msg][0], collection_user[msg][1], collection_user[msg][2])
 
-
 if __name__ == '__main__':
     main()
-
-    # f'@id{id_user} Получить расписание')
-    # send_chat(id, f'@id{id_user} Hello everybody')
-    # send_chat(id, f'Ваш заказ: {wiki_parcer.wiki_parcer()}')
-
-
-# group_id1 = vk_user.messages.searchConversations(q=Name.names['group_name'])
-# group_id1 = group_id1['items'][0]['peer']['id']
-# print(group_id1)
