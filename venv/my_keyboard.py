@@ -38,9 +38,11 @@ def get_keyboard_materials():
     key_board.add_button('Менеджмент', color=VkKeyboardColor.PRIMARY)
     key_board.add_button('Материаловедение', color=VkKeyboardColor.PRIMARY)
     key_board.add_line()
-    key_board.add_button('Дубровский, Сучков', color=VkKeyboardColor.PRIMARY)
+    key_board.add_button('Дубровский', color=VkKeyboardColor.PRIMARY)
     key_board.add_button('Экология', color=VkKeyboardColor.PRIMARY)
     key_board.add_button('Назад.', color=VkKeyboardColor.PRIMARY)
+    key_board.add_line()
+    key_board.add_button('Ввести свой запрос', color=VkKeyboardColor.PRIMARY)
 
     return key_board.get_keyboard()
 
