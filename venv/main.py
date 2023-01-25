@@ -10,6 +10,7 @@ import os  # работа с файловой системой
 import Name  # файлик с переменными, которые нужно менять, при переносе бота в другую группу
 import weather
 import requests  # для парсинга мемов
+import sqlite3 as sq  # база данных
 
 # загрузка токена и id группы из локального виртуального окружения
 load_dotenv()
@@ -66,12 +67,59 @@ def send_chat(id, text, keyboard=None):
         vk.messages.send(chat_id=id, message=text, random_id=get_random_id(),
                          keyboard=my_keyboard.get_keyboard_weather())
 
+# работа с базой данных, записывает каждое сообщение
+
+def db_create():
+    with sq.connect('vk_chat.db') as con:
+        cur = con.cursor()
+        cur.execute('''CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER,
+                    message TEXT
+                    )''')
+
+def db_check(id):
+    with sq.connect('vk_chat.db') as con:
+        cur = con.cursor()
+        cur.execute("SELECT id FROM users")
+        for i in cur.fetchall():
+            if id in i:
+                return True
+        return False
+
+def db_write(id,msg):
+    with sq.connect('vk_chat.db') as con:
+        cur = con.cursor()
+        cur.execute("INSERT INTO users (id,message) VALUES(?,?)", (id,msg))
+
 # авторизация в реддите
 reddit = praw.Reddit(
-                    client_id=client_id,
-                    client_secret=client_secret,
-                    user_agent=user_agent,
-                )
+    client_id=client_id,
+    client_secret=client_secret,
+    user_agent=user_agent,
+)
+# отправка расписания
+def get_worklist(id):
+    upload_url = vk.photos.getMessagesUploadServer(peer_id=0)['upload_url']
+    request = requests.post(upload_url, files={'file': open('расписание.jpg', 'rb')})
+    save_Messages_photo = vk.photos.saveMessagesPhoto(photo=request.json()['photo'],
+                                                      server=request.json()['server'], hash=request.json()['hash'])
+
+    saved_photo = 'photo' + str(save_Messages_photo[0]['owner_id']) + '_' + str(save_Messages_photo[0]['id'])
+    vk.messages.send(peer_id=id, attachment=saved_photo, random_id=get_random_id())
+
+
+# отправка инструкции
+def get_help(id):
+    upload_url = vk.docs.getMessagesUploadServer(peer_id=id)['upload_url']
+    request = requests.post(upload_url, files={'file': open('avot.pdf', 'rb')})
+    save_Messages_docs = vk.docs.save(file=request.json()['file'])
+    saved_docs = 'doc' + str(save_Messages_docs['doc']['owner_id']) + '_' + str(save_Messages_docs['doc']['id'])
+
+    vk.messages.send(user_id=id, attachment=saved_docs, random_id=get_random_id())
+
+# создание базы данных
+db_create()
+
 # прослушка и выделение id отправителя, id чата, нахождение требуемого ответа из допустимых
 for event in longpoll.listen():
     if event.type == VkBotEventType.MESSAGE_NEW:
@@ -115,12 +163,9 @@ for event in longpoll.listen():
                     item = submission
                 send_chat(id, f'{item.url}')
 
-            # для пересылания сообщений в группу, оставлю здесь пока, тут по другому ведется подсчет
+            # для отправки расписания
             if msg == f"{bot_adress} Получить расписание" or msg == f"{bot_adress1} Получить расписание":
-                mes = vk_user.messages.search(q='Расписание', peer_id=Name.PEER_ID,
-                                              random_id=get_random_id())  # ищет сообщение по строке
-                vk_user.messages.send(peer_id=Name.PEER_ID, random_id=get_random_id(),
-                                      forward_messages=429330)  # отправляет сообщение (по id) в беседу
+                get_worklist(peer_id)
 
             # работа с сообщениями из коллекции
             if msg in collection_chat:
@@ -154,7 +199,6 @@ for event in longpoll.listen():
 
             if msg == '.бот':
                 # отправка клавиатуры пользователю в беседу
-                # ПРОВЕРИТЬ, КАК РАБОТАЕТ У КАМИЛЯ ПОЛУЧЕНИЕ ЕГО ID БЕСЕДЫ
                 send_chat(id, 'Hello my boy', 'get_keyboard_start_chat')
 
         # если получает сообщение из личного сообщения
@@ -163,9 +207,7 @@ for event in longpoll.listen():
             id = event.message.get('from_id')
 
             # достает id чата с ботом и юзером
-            # Проверить с КАМОЙ
             chat_id = event.group_id
-
             chat_id = chat_id * -1
 
             # достает сообщение в текстовом виде
@@ -181,11 +223,19 @@ for event in longpoll.listen():
                 send_to_user(id, f'{item.url}')
 
             if msg == '.бот':
-                # отправка клавиатуры пользователю в личные сообщения
-                send_to_user(id, 'Hello my boy', 'get_keyboard_start_user')
+                # отправка клавиатуры пользователю в личные сообщения и запись в базу, если его там нет
+                if db_check(id) == False:
+                    db_write(id, msg)
+                    vk.messages.send(user_id=id, sticker_id=66910, message='Hello my user', random_id=get_random_id())
+                    vk.messages.send(user_id=id, message='Hello my user', random_id=get_random_id(), keyboard=my_keyboard.get_keyboard_start_user())
+                    get_help(id)
+
+                else:
+                    send_to_user(id, 'Hello my user, again', 'get_keyboard_start_user')
+                    get_help(id)
 
             if msg == 'Получить расписание':
-                vk_user.messages.send(peer_id=id, random_id=get_random_id(), forward_messages=429330)
+                get_worklist(id)
 
             collection_user = {
                 # клавиатура get_keyboard_start_user
@@ -277,7 +327,7 @@ for event in longpoll.listen():
                     object_or_name = object_or_name
 
                     # здесь номер группы будет отличаться, здесь счет в хронологическом порядке
-                    materials = vk_user.messages.search(q=object_or_name, peer_id=Name.PEER_ID,
+                    materials = vk_user.messages.search(q=object_or_name, preview_length=5, peer_id=Name.PEER_ID,
                                                         random_id=get_random_id(), count=100)
 
                     # цикл перебора полученных материалов и их пересылание
@@ -312,11 +362,12 @@ for event in longpoll.listen():
 
                         vk_user.messages.send(peer_id=id, random_id=get_random_id(),
                                               forward_messages=whole_materials)
-                        vk.messages.send(user_id=id, message=f'Отправлено: {materials_counter} сообщений. На этом все.',
+                        vk.messages.send(user_id=id,
+                                         message=f'Отправлено: {materials_counter} сообщений. Все нашел и отправил.',
                                          random_id=get_random_id())
                     except:
                         vk.messages.send(user_id=id,
-                                         message=f'Зачем ты тыкаешь, дай мне спокойно все выгрузить. Посиди в бане 5 минут, а потом повтори запрос. Осталось материалов: {materials_counter}',
+                                         message=f'Я не такой быстрый. Я не успел прочитать твои сообщения. Повтори запрос. Осталось материалов: {materials_counter}',
                                          random_id=get_random_id())
 
                 # если запрос был задан неправильно
