@@ -7,7 +7,6 @@ import wiki_parcer  # парсит вики страничку
 import my_keyboard  # модуль с клавиатурами
 from dotenv import load_dotenv  # загрузка информации из .env-файла
 import os  # работа с файловой системой
-import Name  # файлик с переменными, которые нужно менять, при переносе бота в другую группу
 import weather
 import requests  # для парсинга мемов
 import sqlite3 as sq  # база данных
@@ -18,15 +17,25 @@ token_for_group = os.getenv("ACCESS_TOKEN_FOR_GROUP")
 token_for_user = os.getenv("ACCESS_TOKEN_FOR_USER")
 group_id = os.getenv("GROUP_ID")
 my_user_id = os.getenv("USER_ID")
+
+# загрузка id группы(из которой достаются данные). От личной страницы
+PEER_ID = os.getenv("PEER_ID")
+
+# загрузка id бота-сообщества, смотреть в вк, в поисковой строке. Менять, если создается новый бот.
+bot_adress = os.getenv("bot_adress")
+bot_adress1 = os.getenv("bot_adress1")
+
 # загрузка данных авторизации для реддита
 client_id = os.getenv("client_id")
 client_secret = os.getenv("client_secret")
 user_agent = os.getenv("user_agent")
 
 # авторизация в вк
+# за группу
 vk_session = vk_api.VkApi(token=token_for_group)
 vk = vk_session.get_api()
 
+# за страницу
 vk_session_user = vk_api.VkApi(token=token_for_user)
 vk_user = vk_session_user.get_api()
 
@@ -35,7 +44,6 @@ longpoll = VkBotLongPoll(vk_session, group_id)
 
 
 # отправка сообщений в личку (от токена группы)
-
 def send_to_user(id, text, keyboard=None):
     if keyboard == None:
         vk.messages.send(user_id=id, message=text, random_id=get_random_id())
@@ -53,7 +61,6 @@ def send_to_user(id, text, keyboard=None):
         vk.messages.send(user_id=id, message=text, random_id=get_random_id(),
                          keyboard=my_keyboard.get_keyboard_weather())
 
-
 # отправка сообщений в группу
 def send_chat(id, text, keyboard=None):
     if keyboard == None:
@@ -67,8 +74,7 @@ def send_chat(id, text, keyboard=None):
         vk.messages.send(chat_id=id, message=text, random_id=get_random_id(),
                          keyboard=my_keyboard.get_keyboard_weather())
 
-# работа с базой данных, записывает каждое сообщение
-
+# создание базы данных
 def db_create():
     with sq.connect('vk_chat.db') as con:
         cur = con.cursor()
@@ -77,6 +83,7 @@ def db_create():
                     message TEXT
                     )''')
 
+# проверка, на наличие пользователя в базе
 def db_check(id):
     with sq.connect('vk_chat.db') as con:
         cur = con.cursor()
@@ -86,6 +93,7 @@ def db_check(id):
                 return True
         return False
 
+# запись в базу, если пользователя там нет
 def db_write(id,msg):
     with sq.connect('vk_chat.db') as con:
         cur = con.cursor()
@@ -95,8 +103,8 @@ def db_write(id,msg):
 reddit = praw.Reddit(
     client_id=client_id,
     client_secret=client_secret,
-    user_agent=user_agent,
-)
+    user_agent=user_agent,)
+
 # отправка расписания
 def get_worklist(id):
     upload_url = vk.photos.getMessagesUploadServer(peer_id=0)['upload_url']
@@ -111,7 +119,7 @@ def get_worklist(id):
 # отправка инструкции
 def get_help(id):
     upload_url = vk.docs.getMessagesUploadServer(peer_id=id)['upload_url']
-    request = requests.post(upload_url, files={'file': open('avot.pdf', 'rb')})
+    request = requests.post(upload_url, files={'file': open('Инструкция.pdf', 'rb')})
     save_Messages_docs = vk.docs.save(file=request.json()['file'])
     saved_docs = 'doc' + str(save_Messages_docs['doc']['owner_id']) + '_' + str(save_Messages_docs['doc']['id'])
 
@@ -137,10 +145,9 @@ for event in longpoll.listen():
             # в хронологическом порядке (Например, если эта группа создана последней, то номер будет = 87)
             peer_id = event.message.get('peer_id')
 
-            # цифры - id бота-группы, смотреть в вк, в поисковой строке
-
-            bot_adress = '[club218249845|@public218249845]'
-            bot_adress1 = '[club218249845|@club218249845]'
+            # цифры - id бота-группы, смотреть в вк, в поисковой строке. Менять, если создается новый бот.
+            bot_adress = '[club218249845|@public218249845]' # для распознавания сообщений с пк
+            bot_adress1 = '[club218249845|@club218249845]'  # для распознавания сообщений с смартфона
 
             collection_chat = {
                 f"{bot_adress} Погода": (id, f'...', 'get_keyboard_weather'),
@@ -176,7 +183,7 @@ for event in longpoll.listen():
                 send_chat(id, 'Введите название города и отправьте в беседу')
 
             # считывает последние два сообщения, в последнем должно содержаться название города
-            msg_last_city_chat = vk_user.messages.getHistory(peer_id=Name.PEER_ID, random_id=get_random_id(), count=2)
+            msg_last_city_chat = vk_user.messages.getHistory(peer_id=PEER_ID, random_id=get_random_id(), count=2)
 
             city = msg_last_city_chat['items'][0]['text']
             write_city = msg_last_city_chat['items'][1]['text']
@@ -222,8 +229,8 @@ for event in longpoll.listen():
                     item = submission
                 send_to_user(id, f'{item.url}')
 
+            # отправка клавиатуры пользователю в личные сообщения и запись в базу, если его там нет(также активация бота)
             if msg == '.бот':
-                # отправка клавиатуры пользователю в личные сообщения и запись в базу, если его там нет
                 if db_check(id) == False:
                     db_write(id, msg)
                     vk.messages.send(user_id=id, sticker_id=66910, message='Hello my user', random_id=get_random_id())
@@ -275,6 +282,7 @@ for event in longpoll.listen():
             if msg == f"Ввести другой город" or msg == 'Введите корректное название города':
                 send_to_user(id, 'Введите название города и отправьте мне')
 
+            # отправляет погоду в любом городе
             # считывает последние два сообщения, в последнем должно содержаться название города
             msg_last_city_chat = vk.messages.getHistory(peer_id=id, random_id=get_random_id(), count=2)
             city = msg_last_city_chat['items'][0]['text']
@@ -294,9 +302,6 @@ for event in longpoll.listen():
                         send_to_user(id, 'Введите корректное название города')
                     if temp != None:
                         send_to_user(id, temp)
-
-            # Здесь парсит опять два последних сообщения за счет юзера и смотрит, если в предыдущем "ввести другой город",
-            # а в последнем какое то слово, то он его загоняет в weather, а она выдает сразу инфу. Про москву тоже сделать
 
             # определяет вид материала, время, за которое нужно вернуть его, а также сам парсер материалов из беседы
             if msg in collection_user_time:
@@ -323,19 +328,20 @@ for event in longpoll.listen():
                         time_return = 14515200
                     if time_return == 'за 1 год':
                         time_return = 29030400
+
                     # для нахождения требуемого сообщения (меняется только через код)
                     object_or_name = object_or_name
 
                     # здесь номер группы будет отличаться, здесь счет в хронологическом порядке
-                    materials = vk_user.messages.search(q=object_or_name, preview_length=5, peer_id=Name.PEER_ID,
+                    materials = vk_user.messages.search(q=object_or_name, peer_id=PEER_ID,
                                                         random_id=get_random_id(), count=100)
-
-                    # цикл перебора полученных материалов и их пересылание
 
                     # если ничего не нашел
                     if materials['count'] == 0:
                         vk.messages.send(user_id=id, message='Ничего не найдено', random_id=get_random_id())
 
+                    # цикл перебора полученных материалов и их пересылание
+                    # обертка из try except для предотвращения остановки программы из-за капчи
                     try:
                         # пересылание сообщений
                         materials_counter = materials['count']
@@ -358,22 +364,22 @@ for event in longpoll.listen():
                                 vk.messages.send(user_id=id,
                                                  message=f'Слишком старое сообщение, дата его создания: {old_mes_time}',
                                                  random_id=get_random_id())
-                                print('Слишком старый файл')
 
-                        vk_user.messages.send(peer_id=id, random_id=get_random_id(),
-                                              forward_messages=whole_materials)
+                        vk_user.messages.send(peer_id=id, random_id=get_random_id(), forward_messages=whole_materials)
                         vk.messages.send(user_id=id,
                                          message=f'Отправлено: {materials_counter} сообщений. Все нашел и отправил.',
                                          random_id=get_random_id())
                     except:
-                        vk.messages.send(user_id=id,
+                        if materials_counter == 0:
+                            vk.messages.send(user_id=id, message='Попробуйте другой запрос', random_id=get_random_id())
+                        else:
+                            vk.messages.send(user_id=id,
                                          message=f'Я не такой быстрый. Я не успел прочитать твои сообщения. Повтори запрос. Осталось материалов: {materials_counter}',
                                          random_id=get_random_id())
 
-                # если запрос был задан неправильно
+                # если запрос был задан неправильно(последние 2 сообщения неправильные)
                 else:
-                    print('No')
-                    send_to_user(id, 'Повторите запрос еще раз', 'get_keyboard_materials')
+                    send_to_user(id, 'Повторите запрос еще раз. Этот я не понял.', 'get_keyboard_materials')
 
             # определяет объект/препод и отсылает клавиатуру с выбором времени возвращения
             if msg in collection_user:
