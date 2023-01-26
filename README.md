@@ -5,7 +5,7 @@ Then bot get weather any city. Send random memes from reddit and few other funct
 :smiley:
 ### Examples
 ___
-![logo](https://cdn.moviefone.com/image-assets/671/wuMc08IPKEatf9rnMNXvIDxqP4W.jpg?d=360x540&q=60)
+![logo](https://disk.yandex.ru/client/disk?idApp=client&dialog=slider&idDialog=%2Fdisk%2F1.PNG)
 ![logo](D:\загрузки из интернета\2.PNG)
 
 
