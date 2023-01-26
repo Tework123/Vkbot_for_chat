@@ -1,0 +1,17 @@
+#Example:
+
+ACCESS_TOKEN_FOR_GROUP='vk1.a.PT0IHnLbmn-CveHxh10S-k3K_lWLAFpkjl;uGUTOrXTpks2_MoKAoeJOeYjN1Uk;lj;GmL-oowl3fdERtICG_0dUyOm7uxRNCguXaI0mJKIJMadIkvjnLs8ZsyZQkev56gjXMBWnyT5vDDCQN0AtuAZ3729ZID0SDwC9FWxdyECdgr1Ued3r03j8m9b3LzTNHA'
+ACCESS_TOKEN_FOR_USER = 'vk1.a.sCrZ3u_CJMZ02cQMFkVTz6qZthcno-t-Ki7eSTjkl;nT6UlCYXAqJ5Sv62BhshTV9npDjkl;mr7mNK6sYo5ZdMF1sD2z3agOOb_bFAIJcLDFTIq9HdpOagHxLz6am2G1ysubw2lcUuLj0cZ_cuf1gq859Mp_e6OCRDqApyjNRTjWbQKI_gXROYTQ'
+#id бота, который нужно смотреть в вк
+GROUP_ID='21218349845'
+#id моей страницы
+USER_ID = '121933790'
+# для реддита
+client_id = "cOEd44afdsasfgs9jMKYCbg"
+client_secret="TUKPasdfafT0GWV979wafbHVF-DZw"
+user_agent="http://localhost:8080"
+# номер группы от личной страницы
+PEER_ID = 2000000087
+#id бота-сообщества, смотреть в вк, в поисковой строке. Менять, если создается новый бот.
+bot_adress='[club21218349845|@public21218349845]'
+bot_adress1='[club21218349845|@club21218349845]'
