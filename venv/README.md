@@ -1,12 +1,12 @@
-# Vk_bot for chat
+# :school: Vk_bot for chat
 ___
 Bot search messages with attachments in the vk group. Send them to user.
 Then bot get weather any city. Send random memes from reddit and few other functions.
 :smiley:
-### Example
+### Examples
 ___
-![logo](https://vk.com/doc149173790_655211278?hash=4igu7RtBjGe5exLrGG2dYEze3gydBT98HXhv9tqJg0z&dl=bzrIdsTo51249Zj4bVl0RtkkffEfiPpJFoxuBHHDsWc)
-![logo](https://vk.com/doc149173790_655211285?hash=QNGBaohtfsmw1VIxJnXIhzMtTKPR7kshEziI2h32BLX&dl=Mhes2zXBYv7GIen8nk5821d5yzV2tfLzZFU7Ra6Y6wk)
+![alt text](C:\Users\1.PNG)
+![alt text](C:\Users\2.PNG)
 
 
 ### Installation and usage
