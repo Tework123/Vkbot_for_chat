@@ -5,9 +5,9 @@ Then bot get weather any city. Send random memes from reddit and few other funct
 :smiley:
 ### Examples
 ___
-<img src="https://user-images.githubusercontent.com/115368408/214830562-e8c7c776-c167-4925-9688-97557218ac90.PNG" width="300">
+<img src="https://user-images.githubusercontent.com/115368408/214830562-e8c7c776-c167-4925-9688-97557218ac90.PNG" width="500">
 
-<img src="https://user-images.githubusercontent.com/115368408/214830677-743ee926-fcf2-4b90-a47e-17322e00f015.PNG" width="300">
+<img src="https://user-images.githubusercontent.com/115368408/214830677-743ee926-fcf2-4b90-a47e-17322e00f015.PNG" width="500">
 
 
 ### Installation and usage
