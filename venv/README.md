@@ -3,6 +3,11 @@ ___
 Bot search messages with attachments in the vk group. Send them to user.
 Then bot get weather any city. Send random memes from reddit and few other functions.
 :smiley:
+### Example
+___
+![logo](1.PNG)
+![logo](2.PNG)
+
 
 ### Installation and usage
 ___
