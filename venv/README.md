@@ -36,15 +36,16 @@ for beginner developers.
   + get client_secret and put to .env
   + user_agent="http://localhost:8080" (always) and put to .env
 
+:pencil: Put few fails:
+  + Put 'Инструкция.pdf' to folder
+  + Put 'расписание.jpg' to folder
+
 :school: Vk group with users:
 + Add bot to group
     + get permission put messages for bot
     + take peer_id (this group(not bot)) from search string (last digits) and put this to .env
 + You must be there too
 
-:pencil: Put few fails:
-  + Put 'Инструкция.pdf' to folder
-  + Put 'расписание.jpg' to folder
-Usage for peoples:
+:boy: Usage for peoples:
 + Say them:
         send message ".бот" to group with bot
