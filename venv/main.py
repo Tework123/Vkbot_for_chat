@@ -284,10 +284,12 @@ for event in longpoll.listen():
 
             # отправляет погоду в любом городе
             # считывает последние два сообщения, в последнем должно содержаться название города
-            msg_last_city_chat = vk.messages.getHistory(peer_id=id, random_id=get_random_id(), count=2)
-            city = msg_last_city_chat['items'][0]['text']
-            write_city = msg_last_city_chat['items'][1]['text']
-
+            try:
+                msg_last_city_chat = vk.messages.getHistory(peer_id=id, random_id=get_random_id(), count=2)
+                city = msg_last_city_chat['items'][0]['text']
+                write_city = msg_last_city_chat['items'][1]['text']
+            except:
+                send_to_user(id, 'Жара пошла, повтори еще раз. Если есть интересные предложения, то пишите в личку')
             if write_city == 'Введите название города и отправьте мне' or write_city == 'Введите корректное название города':
                 city = city.split()
                 if len(city) == 1:
