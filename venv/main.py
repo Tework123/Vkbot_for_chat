@@ -389,3 +389,10 @@ for event in longpoll.listen():
 
 if __name__ == '__main__':
     main()
+
+
+# создание виртуальной среды в пайтонанивхере
+# mkvirtualenv my-virtualenv --python=python3.10
+# pip install -r requirements.txt
+# create app
+# в консоли пишем python main.py
